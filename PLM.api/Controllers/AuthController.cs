@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PLM.api.Data;
 using PLM.api.Models.Domain;
 using PLM.api.Models.DTO;
@@ -187,5 +188,41 @@ namespace PLM.api.Controllers
                 return StatusCode(500, $"Failed to send email: {ex.Message}");
             }
         }
+
+        [HttpGet]
+        [Route("GetUserById")]
+        //[Authorize]
+        public async Task<IActionResult> GetUserById(int id)
+        {
+            try
+            {
+                // Retrieve the user from the database by their ID
+                var user = await pLMDbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+
+                // If the user is not found, return NotFound response
+                if (user == null)
+                {
+                    return NotFound("User not found");
+                }
+
+                // Map the user to UserDTO
+                var userDTO = new UserDTO
+                {
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    Type = user.Type.ToString() // Convert enum to string
+                };
+
+                // Return the DTO object
+                return Ok(userDTO);
+            }
+            catch (Exception ex)
+            {
+                // Return an internal server error if something goes wrong
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
     }
 }
